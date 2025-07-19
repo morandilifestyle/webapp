@@ -1,0 +1,111 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up phase"
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained load"
+    - duration: 120
+      arrivalRate: 100
+      name: "Peak load"
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool down"
+  defaults:
+    headers:
+      User-Agent: 'Artillery Performance Test'
+      Accept: 'application/json'
+      'Content-Type': 'application/json'
+
+scenarios:
+  - name: "Homepage Load Test"
+    weight: 30
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: 200
+            - hasHeader: "content-type"
+      - think: 2
+      - get:
+          url: "/api/products"
+          expect:
+            - statusCode: 200
+            - contentType: json
+
+  - name: "Product Catalog Test"
+    weight: 25
+    flow:
+      - get:
+          url: "/products"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/products?page=1&limit=12"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 2
+      - get:
+          url: "/api/products?category=maternity"
+          expect:
+            - statusCode: 200
+
+  - name: "User Authentication Test"
+    weight: 20
+    flow:
+      - get:
+          url: "/login"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "TestPassword123!"
+          expect:
+            - statusCode: [200, 401]
+      - think: 2
+
+  - name: "Product Search Test"
+    weight: 15
+    flow:
+      - get:
+          url: "/products"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/products?search=organic"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 2
+
+  - name: "Shopping Cart Test"
+    weight: 10
+    flow:
+      - get:
+          url: "/cart"
+          expect:
+            - statusCode: [200, 302]
+      - think: 1
+      - post:
+          url: "/api/cart/add"
+          json:
+            productId: "test-product-id"
+            quantity: 1
+          expect:
+            - statusCode: [200, 401]
+
+plugins:
+  expect: {}
+  metrics-by-endpoint: {}
+  expect: {}
+  metrics-by-endpoint: {}
+
+processor: "./qa/performance-helpers.js" 

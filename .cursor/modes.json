@@ -1,0 +1,27 @@
+{
+  "analyst": {
+    "model": "ollama/qwen:latest",
+    "prompts": ["analyst.prompt"]
+  },
+  "pm": {
+    "model": "ollama/qwen:latest",
+    "prompts": ["pm.prompt"]
+  },
+  "architect": {
+    "model": "ollama/qwen:latest",
+    "prompts": ["architect.prompt"]
+  },
+  "dev": {
+    "model": "ollama/qwen:latest",
+    "prompts": ["dev.prompt"]
+  },
+  "qa": {
+    "model": "ollama/qwen:latest",
+    "prompts": ["qa.prompt"]
+  },
+  "scrum": {
+    "model": "ollama/qwen:latest",
+    "prompts": ["scrum.prompt"]
+  }
+}
+  

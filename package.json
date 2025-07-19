@@ -1,13 +1,65 @@
 {
   "name": "morandi",
   "version": "1.0.0",
-  "description": "",
+  "description": "Morandi Lifestyle E-commerce Platform - Sustainable Wellness Textiles",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:supabase\"",
+    "dev:frontend": "cd morandi && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:supabase": "supabase start",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd morandi && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd morandi && npm run test",
+    "test:backend": "cd backend && npm run test",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd morandi && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "setup": "npm install && cd morandi && npm install && cd ../backend && npm install && supabase start",
+    "db:reset": "supabase db reset",
+    "db:migrate": "supabase db push",
+    "db:seed": "supabase db reset --seed",
+    "studio": "supabase studio"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "e-commerce",
+    "sustainable",
+    "textiles",
+    "wellness",
+    "nextjs",
+    "supabase"
+  ],
+  "author": "Morandi Team",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.2.0",
+    "axios": "^1.10.0",
+    "lucide-react": "^0.525.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
 }

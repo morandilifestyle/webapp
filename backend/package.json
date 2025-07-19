@@ -1,0 +1,55 @@
+{
+  "name": "morandi-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Morandi e-commerce platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.2.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.3",
+    "razorpay": "^2.9.6",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.8",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.9.0",
+    "@types/pg": "^8.10.9",
+    "@types/supertest": "^2.0.16",
+    "@types/uuid": "^9.0.7",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.2.2"
+  },
+  "keywords": [
+    "e-commerce",
+    "api",
+    "nodejs",
+    "typescript"
+  ],
+  "author": "Morandi Team",
+  "license": "MIT"
+}
