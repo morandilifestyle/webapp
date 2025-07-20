@@ -22,7 +22,6 @@ interface ShippingMethod {
 
 export default function ShippingForm({ onNext, onBack, initialData }: ShippingFormProps) {
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [loading, setLoading] = useState(false);
   const [useSameAddress, setUseSameAddress] = useState(true);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(initialData.shipping_method_id);
   

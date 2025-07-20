@@ -1,4 +1,6 @@
+import { supabase } from './config/database';
 declare const app: import("express-serve-static-core").Express;
-export declare const supabase: import("@supabase/supabase-js").SupabaseClient<any, "public", any>;
+declare const server: import("http").Server<typeof import("http").IncomingMessage, typeof import("http").ServerResponse>;
+export { server, supabase };
 export default app;
 //# sourceMappingURL=index.d.ts.map

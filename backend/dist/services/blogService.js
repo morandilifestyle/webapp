@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.blogService = exports.BlogService = void 0;
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 class BlogService {
     constructor() {
-        this.supabase = index_1.supabase;
+        this.supabase = database_1.supabase;
     }
     async getBlogPosts(filters = {}) {
-        let query = index_1.supabase
+        let query = database_1.supabase
             .from('blog_posts')
             .select(`
         *,
@@ -49,7 +49,7 @@ class BlogService {
         return data?.map(this.mapBlogPostFromDB) || [];
     }
     async getBlogPostBySlug(slug) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_posts')
             .select(`
         *,
@@ -70,7 +70,7 @@ class BlogService {
         return this.mapBlogPostFromDB(data);
     }
     async getBlogPostById(id) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_posts')
             .select(`
         *,
@@ -92,7 +92,7 @@ class BlogService {
     async createBlogPost(postData, authorId) {
         const slug = postData.slug || this.generateSlug(postData.title);
         const readingTime = this.calculateReadingTime(postData.content);
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_posts')
             .insert({
             title: postData.title,
@@ -145,7 +145,7 @@ class BlogService {
             updateData.tags = postData.tags;
         if (postData.isFeatured !== undefined)
             updateData.is_featured = postData.isFeatured;
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_posts')
             .update(updateData)
             .eq('id', id)
@@ -160,7 +160,7 @@ class BlogService {
         return this.mapBlogPostFromDB(data);
     }
     async deleteBlogPost(id) {
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('blog_posts')
             .delete()
             .eq('id', id);
@@ -169,7 +169,7 @@ class BlogService {
         }
     }
     async getBlogCategories() {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_categories')
             .select('*')
             .eq('is_active', true)
@@ -180,7 +180,7 @@ class BlogService {
         return data?.map(this.mapBlogCategoryFromDB) || [];
     }
     async createBlogCategory(categoryData) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_categories')
             .insert({
             name: categoryData.name,
@@ -198,7 +198,7 @@ class BlogService {
         return this.mapBlogCategoryFromDB(data);
     }
     async getBlogComments(postId) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_comments')
             .select(`
         *,
@@ -215,7 +215,7 @@ class BlogService {
         return data?.map(this.mapBlogCommentFromDB) || [];
     }
     async createBlogComment(commentData, userId) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('blog_comments')
             .insert({
             post_id: commentData.postId,
@@ -236,7 +236,7 @@ class BlogService {
         return this.mapBlogCommentFromDB(data);
     }
     async approveComment(commentId) {
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('blog_comments')
             .update({ is_approved: true })
             .eq('id', commentId);
@@ -245,7 +245,7 @@ class BlogService {
         }
     }
     async deleteComment(commentId) {
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('blog_comments')
             .delete()
             .eq('id', commentId);
@@ -254,7 +254,7 @@ class BlogService {
         }
     }
     async getPromotionalContent(location) {
-        let query = index_1.supabase
+        let query = database_1.supabase
             .from('promotional_content')
             .select('*')
             .eq('is_active', true);
@@ -269,7 +269,7 @@ class BlogService {
         return data?.map(this.mapPromotionalContentFromDB) || [];
     }
     async subscribeToNewsletter(email, firstName, lastName, source) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('newsletter_subscriptions')
             .upsert({
             email,
@@ -286,7 +286,7 @@ class BlogService {
         return this.mapNewsletterSubscriptionFromDB(data);
     }
     async unsubscribeFromNewsletter(email) {
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('newsletter_subscriptions')
             .update({ is_active: false })
             .eq('email', email);
@@ -295,7 +295,7 @@ class BlogService {
         }
     }
     async trackContentView(contentId, contentType, userId, sessionId) {
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('content_analytics')
             .insert({
             content_id: contentId,
@@ -311,7 +311,7 @@ class BlogService {
         }
     }
     async getContentAnalytics(contentId, contentType) {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('content_analytics')
             .select('*')
             .eq('content_id', contentId)
@@ -354,7 +354,7 @@ class BlogService {
             post_id: postId,
             category_id: categoryId
         }));
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('blog_post_categories')
             .insert(categoryData);
         if (error) {
@@ -362,7 +362,7 @@ class BlogService {
         }
     }
     async updatePostCategories(postId, categoryIds) {
-        await index_1.supabase
+        await database_1.supabase
             .from('blog_post_categories')
             .delete()
             .eq('post_id', postId);

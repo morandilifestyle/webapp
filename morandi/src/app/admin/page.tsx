@@ -9,8 +9,7 @@ import {
   ShoppingCart, 
   Users, 
   TrendingUp,
-  AlertTriangle,
-  Activity
+  AlertTriangle
 } from 'lucide-react';
 import ProductManagement from '@/components/admin/ProductManagement';
 

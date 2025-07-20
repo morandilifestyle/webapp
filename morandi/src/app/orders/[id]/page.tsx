@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getOrder, getOrderTracking, cancelOrder, downloadInvoice } from '@/lib/api/orders';
-import { Order, OrderTracking, OrderStatusHistory } from '@/types/order';
+import { Order, OrderTracking } from '@/types/order';
 import { formatCurrency, formatDate, formatRelativeTime } from '@/utils/format';
 
 export default function OrderDetailPage() {

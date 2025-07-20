@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckoutService = void 0;
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
 const razorpay = new razorpay_1.default({
@@ -29,7 +29,7 @@ class CheckoutService {
                 },
             });
             const orderNumber = await this.generateOrderNumber();
-            const { data: order, error } = await index_1.supabase
+            const { data: order, error } = await database_1.supabase
                 .from('orders')
                 .insert({
                 user_id: data.user_id,
@@ -60,7 +60,7 @@ class CheckoutService {
                 total_price: item.total_price,
                 attributes: item.attributes,
             }));
-            const { error: itemsError } = await index_1.supabase
+            const { error: itemsError } = await database_1.supabase
                 .from('order_items')
                 .insert(orderItems);
             if (itemsError) {
@@ -83,7 +83,7 @@ class CheckoutService {
     }
     static async validateCartItems(items) {
         for (const item of items) {
-            const { data: product, error } = await index_1.supabase
+            const { data: product, error } = await database_1.supabase
                 .from('products')
                 .select('id, name, sku, price, sale_price, stock_quantity, is_active')
                 .eq('id', item.product_id)
@@ -105,7 +105,7 @@ class CheckoutService {
     }
     static async calculateShippingCost(items, shippingMethodId) {
         const totalWeight = items.reduce((sum, item) => sum + (item.quantity * 0.5), 0);
-        const { data: shippingMethod, error } = await index_1.supabase
+        const { data: shippingMethod, error } = await database_1.supabase
             .from('shipping_methods')
             .select('*')
             .eq('id', shippingMethodId)
@@ -118,7 +118,7 @@ class CheckoutService {
         return Math.max(shippingCost, 0);
     }
     static async generateOrderNumber() {
-        const { data, error } = await index_1.supabase.rpc('generate_order_number');
+        const { data, error } = await database_1.supabase.rpc('generate_order_number');
         if (error) {
             throw new Error(`Failed to generate order number: ${error.message}`);
         }
@@ -144,7 +144,7 @@ class CheckoutService {
     }
     static async processSuccessfulPayment(orderId, razorpayOrderId, razorpayPaymentId) {
         try {
-            const { error: orderError } = await index_1.supabase
+            const { error: orderError } = await database_1.supabase
                 .from('orders')
                 .update({
                 status: 'confirmed',
@@ -155,7 +155,7 @@ class CheckoutService {
             if (orderError) {
                 throw new Error(`Failed to update order: ${orderError.message}`);
             }
-            const { error: transactionError } = await index_1.supabase
+            const { error: transactionError } = await database_1.supabase
                 .from('payment_transactions')
                 .insert({
                 order_id: orderId,
@@ -178,7 +178,7 @@ class CheckoutService {
         }
     }
     static async updateInventory(orderId) {
-        const { data: orderItems, error } = await index_1.supabase
+        const { data: orderItems, error } = await database_1.supabase
             .from('order_items')
             .select('product_id, quantity')
             .eq('order_id', orderId);
@@ -186,7 +186,7 @@ class CheckoutService {
             throw new Error(`Failed to get order items: ${error.message}`);
         }
         for (const item of orderItems) {
-            const { data: product, error: fetchError } = await index_1.supabase
+            const { data: product, error: fetchError } = await database_1.supabase
                 .from('products')
                 .select('stock_quantity')
                 .eq('id', item.product_id)
@@ -195,7 +195,7 @@ class CheckoutService {
                 console.error(`Failed to fetch product ${item.product_id}:`, fetchError);
                 continue;
             }
-            const { error: updateError } = await index_1.supabase
+            const { error: updateError } = await database_1.supabase
                 .from('products')
                 .update({
                 stock_quantity: Math.max(0, (product?.stock_quantity || 0) - item.quantity),
@@ -207,7 +207,7 @@ class CheckoutService {
         }
     }
     static async getShippingMethods() {
-        const { data, error } = await index_1.supabase
+        const { data, error } = await database_1.supabase
             .from('shipping_methods')
             .select('*')
             .eq('is_active', true)

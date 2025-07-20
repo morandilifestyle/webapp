@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { WishlistAPI } from '@/lib/api/wishlist';
 import { WishlistItem } from '@/types/wishlist';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Pagination from '@/components/ui/Pagination';
 import { Heart, ShoppingCart, Trash2, Eye } from 'lucide-react';

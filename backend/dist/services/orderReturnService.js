@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderReturnService = void 0;
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 const paymentService_1 = require("./paymentService");
 class OrderReturnService {
     static async createReturnRequest(request) {
         try {
-            const { data: order, error: orderError } = await index_1.supabase
+            const { data: order, error: orderError } = await database_1.supabase
                 .from('orders')
                 .select('id, status, total_amount')
                 .eq('id', request.orderId)
@@ -17,7 +17,7 @@ class OrderReturnService {
             if (!['delivered', 'shipped'].includes(order.status)) {
                 throw new Error('Order is not eligible for return');
             }
-            const { data: existingReturn, error: existingError } = await index_1.supabase
+            const { data: existingReturn, error: existingError } = await database_1.supabase
                 .from('order_returns')
                 .select('id')
                 .eq('order_id', request.orderId)
@@ -25,7 +25,7 @@ class OrderReturnService {
             if (existingReturn) {
                 throw new Error('Return request already exists for this order');
             }
-            const { data: returnRequest, error } = await index_1.supabase
+            const { data: returnRequest, error } = await database_1.supabase
                 .from('order_returns')
                 .insert({
                 order_id: request.orderId,
@@ -61,7 +61,7 @@ class OrderReturnService {
     }
     static async getOrderReturn(orderId) {
         try {
-            const { data: returnRequest, error } = await index_1.supabase
+            const { data: returnRequest, error } = await database_1.supabase
                 .from('order_returns')
                 .select('*')
                 .eq('order_id', orderId)
@@ -99,7 +99,7 @@ class OrderReturnService {
             if (returnTrackingNumber) {
                 updateData.return_tracking_number = returnTrackingNumber;
             }
-            const { error } = await index_1.supabase
+            const { error } = await database_1.supabase
                 .from('order_returns')
                 .update(updateData)
                 .eq('id', returnId);
@@ -119,7 +119,7 @@ class OrderReturnService {
     }
     static async processRefund(returnId, amount) {
         try {
-            const { data: returnRequest, error: returnError } = await index_1.supabase
+            const { data: returnRequest, error: returnError } = await database_1.supabase
                 .from('order_returns')
                 .select('order_id, refund_method')
                 .eq('id', returnId)
@@ -127,7 +127,7 @@ class OrderReturnService {
             if (returnError || !returnRequest) {
                 throw new Error('Return request not found');
             }
-            const { data: order, error: orderError } = await index_1.supabase
+            const { data: order, error: orderError } = await database_1.supabase
                 .from('orders')
                 .select('razorpay_payment_id, payment_method')
                 .eq('id', returnRequest.order_id)
@@ -155,7 +155,7 @@ class OrderReturnService {
     }
     static async getUserReturns(userId) {
         try {
-            const { data: returns, error } = await index_1.supabase
+            const { data: returns, error } = await database_1.supabase
                 .from('order_returns')
                 .select(`
           *,

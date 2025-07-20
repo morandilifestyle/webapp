@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentService = void 0;
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 const checkoutService_1 = require("./checkoutService");
 const razorpay = new razorpay_1.default({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -69,7 +69,7 @@ class PaymentService {
                 };
             }
             await checkoutService_1.CheckoutService.processSuccessfulPayment(data.order_id, data.razorpay_order_id, data.razorpay_payment_id);
-            const { data: order, error } = await index_1.supabase
+            const { data: order, error } = await database_1.supabase
                 .from('orders')
                 .select('*')
                 .eq('id', data.order_id)
@@ -93,7 +93,7 @@ class PaymentService {
     }
     static async processRefund(data) {
         try {
-            const { data: order, error: orderError } = await index_1.supabase
+            const { data: order, error: orderError } = await database_1.supabase
                 .from('orders')
                 .select('razorpay_payment_id, total_amount')
                 .eq('id', data.order_id)
@@ -117,7 +117,7 @@ class PaymentService {
                     reason: data.reason || 'Customer request',
                 },
             });
-            const { error: updateError } = await index_1.supabase
+            const { error: updateError } = await database_1.supabase
                 .from('orders')
                 .update({
                 payment_status: 'refunded',
@@ -127,7 +127,7 @@ class PaymentService {
             if (updateError) {
                 console.error('Failed to update order status:', updateError);
             }
-            const { error: transactionError } = await index_1.supabase
+            const { error: transactionError } = await database_1.supabase
                 .from('payment_transactions')
                 .insert({
                 order_id: data.order_id,
@@ -157,7 +157,7 @@ class PaymentService {
     }
     static async getPaymentTransaction(orderId) {
         try {
-            const { data, error } = await index_1.supabase
+            const { data, error } = await database_1.supabase
                 .from('payment_transactions')
                 .select('*')
                 .eq('order_id', orderId)

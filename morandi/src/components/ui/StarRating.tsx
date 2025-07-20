@@ -33,7 +33,7 @@ export function StarRating({
     }
   };
 
-  const handleStarHover = (starIndex: number) => {
+  const handleStarHover = (_starIndex: number) => {
     if (interactive) {
       // Add hover effect if needed
     }

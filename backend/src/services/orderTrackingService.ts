@@ -1,4 +1,4 @@
-import { supabase } from '../config/database';
+import { supabase } from '../index';
 
 export interface OrderTracking {
   orderId: string;

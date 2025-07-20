@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 const router = express_1.default.Router();
 router.get('/profile', async (req, res) => {
     try {
@@ -12,7 +12,7 @@ router.get('/profile', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: user, error } = await index_1.supabase
+        const { data: user, error } = await database_1.supabase
             .from('users')
             .select('id, email, first_name, last_name, phone, created_at')
             .eq('id', userId)
@@ -34,7 +34,7 @@ router.put('/profile', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: user, error } = await index_1.supabase
+        const { data: user, error } = await database_1.supabase
             .from('users')
             .update({
             first_name: firstName,
@@ -63,7 +63,7 @@ router.get('/addresses', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: addresses, error } = await index_1.supabase
+        const { data: addresses, error } = await database_1.supabase
             .from('user_addresses')
             .select('*')
             .eq('user_id', userId)
@@ -87,13 +87,13 @@ router.post('/addresses', async (req, res) => {
             return res.status(401).json({ error: 'User not authenticated' });
         }
         if (isDefault) {
-            await index_1.supabase
+            await database_1.supabase
                 .from('user_addresses')
                 .update({ is_default: false })
                 .eq('user_id', userId)
                 .eq('address_type', addressType);
         }
-        const { data: address, error } = await index_1.supabase
+        const { data: address, error } = await database_1.supabase
             .from('user_addresses')
             .insert({
             user_id: userId,
@@ -131,14 +131,14 @@ router.put('/addresses/:id', async (req, res) => {
             return res.status(401).json({ error: 'User not authenticated' });
         }
         if (isDefault) {
-            await index_1.supabase
+            await database_1.supabase
                 .from('user_addresses')
                 .update({ is_default: false })
                 .eq('user_id', userId)
                 .eq('address_type', addressType)
                 .neq('id', id);
         }
-        const { data: address, error } = await index_1.supabase
+        const { data: address, error } = await database_1.supabase
             .from('user_addresses')
             .update({
             address_type: addressType,
@@ -174,7 +174,7 @@ router.delete('/addresses/:id', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { error } = await index_1.supabase
+        const { error } = await database_1.supabase
             .from('user_addresses')
             .delete()
             .eq('id', id)

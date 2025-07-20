@@ -11,11 +11,9 @@ import {
   ThumbsUp, 
   ThumbsDown, 
   Flag, 
-  Calendar, 
   CheckCircle,
   Edit,
   Trash2,
-  Image as ImageIcon
 } from 'lucide-react';
 import Image from 'next/image';
 

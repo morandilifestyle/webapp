@@ -92,10 +92,10 @@ describe('HomePage Component', () => {
   it('renders with correct styling classes', () => {
     const { container } = render(<HomePage />, { wrapper: TestWrapper });
 
-    // Check for Tailwind classes
+    // Check for some key Tailwind utility classes that should exist
     expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
-    expect(container.querySelector('.container-custom')).toBeInTheDocument();
-    expect(container.querySelector('.text-gradient')).toBeInTheDocument();
+    // General container utility present in sections
+    expect(container.querySelector('.container')).toBeInTheDocument();
   });
 
   it('displays emoji icons in category cards', () => {

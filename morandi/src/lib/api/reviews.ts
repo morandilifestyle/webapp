@@ -61,8 +61,8 @@ export class ReviewsAPI {
     formData.append('reviewText', data.reviewText);
 
     if (data.images) {
-      data.images.forEach((image, index) => {
-        formData.append(`images`, image);
+      data.images.forEach((image) => {
+        formData.append('images', image);
       });
     }
 

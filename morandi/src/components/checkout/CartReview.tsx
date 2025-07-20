@@ -1,4 +1,3 @@
-import { useCart } from '@/store/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
 

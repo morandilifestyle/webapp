@@ -4,13 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 const router = express_1.default.Router();
 router.get('/', async (req, res) => {
     try {
         const { page = 1, limit = 12, category, subcategory, search, sort = 'created_at', minPrice, maxPrice, material, organicCertified, featured } = req.query;
         const offset = (Number(page) - 1) * Number(limit);
-        let query = index_1.supabase
+        let query = database_1.supabase
             .from('products')
             .select(`
         *,
@@ -87,7 +87,7 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
     try {
         const { slug } = req.params;
-        const { data: product, error } = await index_1.supabase
+        const { data: product, error } = await database_1.supabase
             .from('products')
             .select(`
         *,
@@ -111,14 +111,14 @@ router.get('/category/:categorySlug', async (req, res) => {
         const { categorySlug } = req.params;
         const { page = 1, limit = 12, sort = 'created_at', subcategory } = req.query;
         const offset = (Number(page) - 1) * Number(limit);
-        let query = index_1.supabase
+        let query = database_1.supabase
             .from('products')
             .select(`
         *,
         product_categories!inner(name, slug, parent_id)
       `)
             .eq('is_active', true);
-        const { data: category } = await index_1.supabase
+        const { data: category } = await database_1.supabase
             .from('product_categories')
             .select('id, parent_id')
             .eq('slug', categorySlug)
@@ -130,7 +130,7 @@ router.get('/category/:categorySlug', async (req, res) => {
             query = query.eq('category_id', category.id);
         }
         else {
-            const { data: subcategories } = await index_1.supabase
+            const { data: subcategories } = await database_1.supabase
                 .from('product_categories')
                 .select('id')
                 .eq('parent_id', category.id);
@@ -177,7 +177,7 @@ router.get('/category/:categorySlug', async (req, res) => {
 });
 router.get('/featured/list', async (req, res) => {
     try {
-        const { data: products, error } = await index_1.supabase
+        const { data: products, error } = await database_1.supabase
             .from('products')
             .select(`
         *,
@@ -201,7 +201,7 @@ router.get('/featured/list', async (req, res) => {
 router.get('/related/:productId', async (req, res) => {
     try {
         const { productId } = req.params;
-        const { data: currentProduct } = await index_1.supabase
+        const { data: currentProduct } = await database_1.supabase
             .from('products')
             .select('category_id')
             .eq('id', productId)
@@ -209,7 +209,7 @@ router.get('/related/:productId', async (req, res) => {
         if (!currentProduct) {
             return res.status(404).json({ error: 'Product not found' });
         }
-        const { data: relatedProducts, error } = await index_1.supabase
+        const { data: relatedProducts, error } = await database_1.supabase
             .from('products')
             .select(`
         *,
@@ -237,7 +237,7 @@ router.get('/search/suggestions', async (req, res) => {
         if (!q || q.length < 2) {
             return res.json({ suggestions: [] });
         }
-        const { data: suggestions, error } = await index_1.supabase
+        const { data: suggestions, error } = await database_1.supabase
             .from('products')
             .select('name, slug, short_description')
             .eq('is_active', true)

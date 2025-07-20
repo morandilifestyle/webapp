@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 const checkoutService_1 = require("../services/checkoutService");
 const paymentService_1 = require("../services/paymentService");
 const orderTrackingService_1 = require("../services/orderTrackingService");
@@ -16,9 +16,12 @@ router.get('/', async (req, res) => {
         const offset = (Number(page) - 1) * Number(limit);
         const userId = req.headers['user-id'];
         if (!userId) {
-            return res.status(401).json({ error: 'User not authenticated' });
+            return res.status(401).json({
+                error: 'User not authenticated',
+                code: 'AUTHENTICATION_REQUIRED'
+            });
         }
-        const { data: orders, error, count } = await index_1.supabase
+        const { data: orders, error, count } = await database_1.supabase
             .from('orders')
             .select('*')
             .eq('user_id', userId)
@@ -26,7 +29,10 @@ router.get('/', async (req, res) => {
             .range(offset, offset + Number(limit) - 1);
         if (error) {
             console.error('Database error:', error);
-            return res.status(500).json({ error: 'Failed to fetch orders' });
+            return res.status(500).json({
+                error: 'Failed to fetch orders',
+                code: 'DATABASE_ERROR'
+            });
         }
         res.json({
             orders,
@@ -40,7 +46,10 @@ router.get('/', async (req, res) => {
     }
     catch (error) {
         console.error('Orders error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            error: 'Internal server error',
+            code: 'INTERNAL_ERROR'
+        });
     }
 });
 router.get('/:id', async (req, res) => {
@@ -48,22 +57,31 @@ router.get('/:id', async (req, res) => {
         const { id } = req.params;
         const userId = req.headers['user-id'];
         if (!userId) {
-            return res.status(401).json({ error: 'User not authenticated' });
+            return res.status(401).json({
+                error: 'User not authenticated',
+                code: 'AUTHENTICATION_REQUIRED'
+            });
         }
-        const { data: order, error } = await index_1.supabase
+        const { data: order, error } = await database_1.supabase
             .from('orders')
             .select('*')
             .eq('id', id)
             .eq('user_id', userId)
             .single();
         if (error || !order) {
-            return res.status(404).json({ error: 'Order not found' });
+            return res.status(404).json({
+                error: 'Order not found',
+                code: 'ORDER_NOT_FOUND'
+            });
         }
         res.json({ order });
     }
     catch (error) {
         console.error('Order error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            error: 'Internal server error',
+            code: 'INTERNAL_ERROR'
+        });
     }
 });
 router.post('/', async (req, res) => {
@@ -71,14 +89,29 @@ router.post('/', async (req, res) => {
         const { items, shippingAddress, billingAddress, paymentMethod } = req.body;
         const userId = req.headers['user-id'];
         if (!userId) {
-            return res.status(401).json({ error: 'User not authenticated' });
+            return res.status(401).json({
+                error: 'User not authenticated',
+                code: 'AUTHENTICATION_REQUIRED'
+            });
+        }
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                error: 'Order items are required',
+                code: 'INVALID_REQUEST'
+            });
+        }
+        if (!shippingAddress) {
+            return res.status(400).json({
+                error: 'Shipping address is required',
+                code: 'INVALID_REQUEST'
+            });
         }
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const taxAmount = subtotal * 0.18;
         const shippingAmount = 0;
         const totalAmount = subtotal + taxAmount + shippingAmount;
         const orderNumber = `MOR${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-        const { data: order, error } = await index_1.supabase
+        const { data: order, error } = await database_1.supabase
             .from('orders')
             .insert({
             user_id: userId,
@@ -96,7 +129,10 @@ router.post('/', async (req, res) => {
             .single();
         if (error) {
             console.error('Database error:', error);
-            return res.status(500).json({ error: 'Failed to create order' });
+            return res.status(500).json({
+                error: 'Failed to create order',
+                code: 'DATABASE_ERROR'
+            });
         }
         res.status(201).json({
             message: 'Order created successfully',
@@ -105,21 +141,33 @@ router.post('/', async (req, res) => {
     }
     catch (error) {
         console.error('Create order error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            error: 'Internal server error',
+            code: 'INTERNAL_ERROR'
+        });
     }
 });
 router.patch('/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const { data: order, error } = await index_1.supabase
+        if (!status) {
+            return res.status(400).json({
+                error: 'Status is required',
+                code: 'INVALID_REQUEST'
+            });
+        }
+        const { data: order, error } = await database_1.supabase
             .from('orders')
             .update({ status })
             .eq('id', id)
             .select()
             .single();
         if (error || !order) {
-            return res.status(404).json({ error: 'Order not found' });
+            return res.status(404).json({
+                error: 'Order not found',
+                code: 'ORDER_NOT_FOUND'
+            });
         }
         res.json({
             message: 'Order status updated successfully',
@@ -128,7 +176,10 @@ router.patch('/:id/status', async (req, res) => {
     }
     catch (error) {
         console.error('Update order error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            error: 'Internal server error',
+            code: 'INTERNAL_ERROR'
+        });
     }
 });
 router.post('/checkout/init', async (req, res) => {
@@ -136,16 +187,37 @@ router.post('/checkout/init', async (req, res) => {
         const { items, shipping_address, billing_address, shipping_method_id, payment_method } = req.body;
         const userId = req.headers['user-id'];
         if (!items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ error: 'Cart items are required' });
+            return res.status(400).json({
+                error: 'Cart items are required',
+                code: 'INVALID_REQUEST'
+            });
         }
         if (!shipping_address) {
-            return res.status(400).json({ error: 'Shipping address is required' });
+            return res.status(400).json({
+                error: 'Shipping address is required',
+                code: 'INVALID_REQUEST'
+            });
         }
         if (!shipping_method_id) {
-            return res.status(400).json({ error: 'Shipping method is required' });
+            return res.status(400).json({
+                error: 'Shipping method is required',
+                code: 'INVALID_REQUEST'
+            });
         }
         if (!payment_method) {
-            return res.status(400).json({ error: 'Payment method is required' });
+            return res.status(400).json({
+                error: 'Payment method is required',
+                code: 'INVALID_REQUEST'
+            });
+        }
+        const requiredFields = ['first_name', 'last_name', 'address_line_1', 'city', 'state', 'postal_code', 'country', 'phone'];
+        for (const field of requiredFields) {
+            if (!shipping_address[field]) {
+                return res.status(400).json({
+                    error: `${field.replace('_', ' ')} is required`,
+                    code: 'INVALID_REQUEST'
+                });
+            }
         }
         const checkoutData = {
             items,
@@ -164,9 +236,26 @@ router.post('/checkout/init', async (req, res) => {
     }
     catch (error) {
         console.error('Checkout initialization error:', error);
+        let errorMessage = 'Checkout initialization failed';
+        let errorCode = 'CHECKOUT_ERROR';
+        if (error instanceof Error) {
+            if (error.message.includes('Product not found')) {
+                errorCode = 'PRODUCT_NOT_FOUND';
+            }
+            else if (error.message.includes('Insufficient stock')) {
+                errorCode = 'INSUFFICIENT_STOCK';
+            }
+            else if (error.message.includes('Price mismatch')) {
+                errorCode = 'PRICE_MISMATCH';
+            }
+            else if (error.message.includes('Invalid shipping method')) {
+                errorCode = 'INVALID_SHIPPING_METHOD';
+            }
+            errorMessage = error.message;
+        }
         res.status(500).json({
-            error: 'Checkout initialization failed',
-            message: error instanceof Error ? error.message : 'Unknown error'
+            error: errorMessage,
+            code: errorCode
         });
     }
 });
@@ -246,7 +335,7 @@ router.post('/payment/refund', async (req, res) => {
         if (!order_id) {
             return res.status(400).json({ error: 'Order ID is required' });
         }
-        const { data: order, error: orderError } = await index_1.supabase
+        const { data: order, error: orderError } = await database_1.supabase
             .from('orders')
             .select('id')
             .eq('id', order_id)
@@ -301,7 +390,7 @@ router.get('/:id/tracking', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: order, error: orderError } = await index_1.supabase
+        const { data: order, error: orderError } = await database_1.supabase
             .from('orders')
             .select('id')
             .eq('id', id)
@@ -332,7 +421,7 @@ router.post('/:id/cancel', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: order, error: orderError } = await index_1.supabase
+        const { data: order, error: orderError } = await database_1.supabase
             .from('orders')
             .select('id, status')
             .eq('id', id)
@@ -464,7 +553,7 @@ router.post('/:id/reorder', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: orderItems, error: itemsError } = await index_1.supabase
+        const { data: orderItems, error: itemsError } = await database_1.supabase
             .from('order_items')
             .select('product_id, product_name, quantity, unit_price')
             .eq('order_id', id);
@@ -496,7 +585,7 @@ router.get('/:id/invoice', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        const { data: order, error: orderError } = await index_1.supabase
+        const { data: order, error: orderError } = await database_1.supabase
             .from('orders')
             .select('*')
             .eq('id', id)
@@ -523,7 +612,7 @@ router.get('/admin/all', async (req, res) => {
     try {
         const { page = 1, limit = 20, status, search } = req.query;
         const offset = (Number(page) - 1) * Number(limit);
-        let query = index_1.supabase
+        let query = database_1.supabase
             .from('orders')
             .select('*, order_items(*)', { count: 'exact' });
         if (status) {
@@ -586,14 +675,14 @@ router.get('/admin/analytics', async (req, res) => {
         if (startDate && endDate) {
             dateFilter = `WHERE created_at >= '${startDate}' AND created_at <= '${endDate}'`;
         }
-        const { data: stats, error: statsError } = await index_1.supabase.rpc('get_order_analytics', {
+        const { data: stats, error: statsError } = await database_1.supabase.rpc('get_order_analytics', {
             p_start_date: startDate || null,
             p_end_date: endDate || null
         });
         if (statsError) {
             console.error('Analytics error:', statsError);
         }
-        const { data: statusDistribution, error: statusError } = await index_1.supabase
+        const { data: statusDistribution, error: statusError } = await database_1.supabase
             .from('orders')
             .select('status')
             .gte('created_at', startDate || '2024-01-01')

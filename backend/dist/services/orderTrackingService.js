@@ -2,11 +2,11 @@
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderTrackingService = void 0;
-const index_1 = require("../index");
+const database_1 = require("../config/database");
 class OrderTrackingService {
     static async getOrderTracking(orderId) {
         try {
-            const { data: tracking, error } = await index_1.supabase
+            const { data: tracking, error } = await database_1.supabase
                 .from('order_tracking')
                 .select('*')
                 .eq('order_id', orderId)
@@ -14,7 +14,7 @@ class OrderTrackingService {
             if (error || !tracking) {
                 return null;
             }
-            const { data: history, error: historyError } = await index_1.supabase
+            const { data: history, error: historyError } = await database_1.supabase
                 .from('order_status_history')
                 .select('*')
                 .eq('order_id', orderId)
@@ -48,7 +48,7 @@ class OrderTrackingService {
     }
     static async updateOrderStatus(orderId, status, description, location, createdBy = 'system') {
         try {
-            const { error } = await index_1.supabase.rpc('update_order_status_with_history', {
+            const { error } = await database_1.supabase.rpc('update_order_status_with_history', {
                 p_order_id: orderId,
                 p_status: status,
                 p_description: description,
@@ -82,7 +82,7 @@ class OrderTrackingService {
     }
     static async createOrderTracking(orderId, trackingNumber, courierName, courierUrl, estimatedDelivery) {
         try {
-            const { error } = await index_1.supabase
+            const { error } = await database_1.supabase
                 .from('order_tracking')
                 .insert({
                 order_id: orderId,
@@ -104,7 +104,7 @@ class OrderTrackingService {
     }
     static async getOrderTimeline(orderId) {
         try {
-            const { data, error } = await index_1.supabase.rpc('get_order_timeline', {
+            const { data, error } = await database_1.supabase.rpc('get_order_timeline', {
                 p_order_id: orderId
             });
             if (error) {
@@ -126,7 +126,7 @@ class OrderTrackingService {
     }
     static async sendOrderNotification(orderId, userId, notificationType, notificationData) {
         try {
-            const { error } = await index_1.supabase
+            const { error } = await database_1.supabase
                 .from('order_notifications')
                 .insert({
                 order_id: orderId,

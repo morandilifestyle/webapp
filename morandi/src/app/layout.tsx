@@ -60,31 +60,6 @@ export const metadata: Metadata = {
   },
 };
 
-export function Head() {
-  return (
-    <>
-      <Script
-        id="ld-json-website"
-        type="application/ld+json"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "Morandi Lifestyle",
-            url: "https://morandi-lifestyle.com",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: "https://morandi-lifestyle.com/search?q={search_term_string}",
-              "query-input": "required name=search_term_string",
-            },
-          }),
-        }}
-      />
-    </>
-  );
-}
-
 export default function RootLayout({
   children,
 }: {
@@ -93,6 +68,24 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={inter.className}>
+        <Script
+          id="ld-json-website"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Morandi Lifestyle",
+              url: "https://morandi-lifestyle.com",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://morandi-lifestyle.com/search?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
         <CartProvider>
           <div className="min-h-screen bg-gray-50">
             {children}
