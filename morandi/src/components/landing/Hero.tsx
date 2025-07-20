@@ -7,8 +7,8 @@ export default function Hero() {
       {/* Decorative image */}
       <div className="absolute inset-0 -z-10">
         <Image
-          src="/images/hero-bg.jpg" // placeholder – replace with exported Figma asset
-          alt="Hero background"
+          src="https://images.pexels.com/photos/3756106/pexels-photo-3756106.jpeg?auto=compress&cs=tinysrgb&w=1920"
+          alt="Sustainable textiles background"
           fill
           className="object-cover object-center opacity-20"
           priority

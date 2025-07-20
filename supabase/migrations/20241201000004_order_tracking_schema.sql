@@ -5,7 +5,7 @@ CREATE TABLE order_status_history (
     status VARCHAR(50) NOT NULL,
     description TEXT,
     location VARCHAR(255),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100) -- 'system', 'admin', 'courier'
 );
 
@@ -64,7 +64,7 @@ CREATE TABLE courier_integrations (
 
 -- Indexes for performance
 CREATE INDEX idx_order_status_history_order_id ON order_status_history(order_id);
-CREATE INDEX idx_order_status_history_timestamp ON order_status_history(timestamp);
+CREATE INDEX idx_order_status_history_event_ts ON order_status_history(event_timestamp);
 CREATE INDEX idx_order_tracking_order_id ON order_tracking(order_id);
 CREATE INDEX idx_order_tracking_tracking_number ON order_tracking(tracking_number);
 CREATE INDEX idx_order_returns_order_id ON order_returns(order_id);
@@ -185,7 +185,7 @@ RETURNS TABLE (
     status VARCHAR(50),
     description TEXT,
     location VARCHAR(255),
-    timestamp TIMESTAMP,
+    event_timestamp TIMESTAMP,
     created_by VARCHAR(100)
 ) AS $$
 BEGIN
@@ -194,10 +194,10 @@ BEGIN
         osh.status,
         osh.description,
         osh.location,
-        osh.timestamp,
+        osh.event_timestamp,
         osh.created_by
     FROM order_status_history osh
     WHERE osh.order_id = p_order_id
-    ORDER BY osh.timestamp ASC;
+    ORDER BY osh.event_timestamp ASC;
 END;
 $$ LANGUAGE plpgsql; 
