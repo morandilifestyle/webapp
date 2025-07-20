@@ -1,6 +1,6 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { supabase } from '../index';
+import { supabase } from '../config/database';
 import { CheckoutService } from './checkoutService';
 
 const razorpay = new Razorpay({

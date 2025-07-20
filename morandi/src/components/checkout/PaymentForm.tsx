@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ShippingAddress } from '@/app/checkout/page';
+import { secureFetch, handleApiError, formatPrice } from '@/lib/utils';
 
 interface PaymentFormProps {
   onNext: (paymentMethod: string) => void;
@@ -26,6 +27,8 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [orderSummary, setOrderSummary] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -34,7 +37,12 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await fetch('/api/orders/payment/methods');
+      const response = await secureFetch('/api/orders/payment/methods');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
       
       if (result.success) {
@@ -42,9 +50,12 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
         if (result.data.length > 0) {
           setSelectedPaymentMethod(result.data[0].id);
         }
+      } else {
+        setErrorMessage(result.error || 'Failed to fetch payment methods');
       }
     } catch (error) {
       console.error('Failed to fetch payment methods:', error);
+      setErrorMessage(handleApiError(error));
     }
   };
 
@@ -60,6 +71,7 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
       });
     } catch (error) {
       console.error('Failed to fetch order summary:', error);
+      setErrorMessage(handleApiError(error));
     }
   };
 
@@ -67,14 +79,24 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
     e.preventDefault();
     
     if (!selectedPaymentMethod) {
-      alert('Please select a payment method');
+      setErrorMessage('Please select a payment method');
       return;
     }
 
-    if (selectedPaymentMethod === 'razorpay') {
-      await handleRazorpayPayment();
-    } else {
-      onNext(selectedPaymentMethod);
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      if (selectedPaymentMethod === 'razorpay') {
+        await handleRazorpayPayment();
+      } else {
+        onNext(selectedPaymentMethod);
+      }
+    } catch (error) {
+      console.error('Payment submission error:', error);
+      setErrorMessage(handleApiError(error));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,6 +131,7 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
           modal: {
             ondismiss: function () {
               console.log('Payment modal closed');
+              setErrorMessage('Payment was cancelled');
             },
           },
         };
@@ -116,18 +139,23 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
       };
+
+      script.onerror = () => {
+        setErrorMessage('Failed to load payment gateway');
+      };
     } catch (error) {
       console.error('Razorpay payment error:', error);
+      setErrorMessage(handleApiError(error));
     }
   };
 
   const verifyPayment = async (response: any) => {
     try {
-      const verifyResponse = await fetch('/api/orders/payment/verify', {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      const verifyResponse = await secureFetch('/api/orders/payment/verify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
@@ -136,24 +164,24 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
         }),
       });
 
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.error || 'Payment verification failed');
+      }
+
       const result = await verifyResponse.json();
 
       if (result.success) {
         onNext('razorpay');
       } else {
-        alert('Payment verification failed: ' + result.error);
+        setErrorMessage(result.error || 'Payment verification failed');
       }
     } catch (error) {
       console.error('Payment verification error:', error);
-      alert('Payment verification failed');
+      setErrorMessage(handleApiError(error));
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-    }).format(price);
   };
 
   return (
@@ -164,6 +192,24 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
       </div>
 
       <form onSubmit={handlePaymentSubmit} className="p-6">
+        {/* Error Display */}
+        {(error || errorMessage) && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  {error || errorMessage}
+                </h3>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Payment Methods */}
         <div className="mb-6">
           <div className="space-y-3">
@@ -208,59 +254,29 @@ export default function PaymentForm({ onNext, onBack, loading, error, orderData 
                 <span>Shipping</span>
                 <span>{formatPrice(orderSummary.shipping)}</span>
               </div>
-              <div className="border-t pt-2">
-                <div className="flex justify-between font-medium">
-                  <span>Total</span>
-                  <span>{formatPrice(orderSummary.total)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="flex justify-between font-medium text-lg border-t pt-2">
+                <span>Total</span>
+                <span>{formatPrice(orderSummary.total)}</span>
               </div>
             </div>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-between">
+        <div className="flex justify-between pt-6 border-t border-gray-200">
           <button
             type="button"
             onClick={onBack}
-            disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Back
           </button>
-          
           <button
             type="submit"
-            disabled={loading || !selectedPaymentMethod}
-            className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            disabled={loading || isLoading || !selectedPaymentMethod}
+            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </>
-            ) : (
-              'Complete Order'
-            )}
+            {isLoading ? 'Processing...' : 'Continue to Payment'}
           </button>
         </div>
       </form>

@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../index';
+import { supabase } from '../config/database';
 import { CheckoutService } from '../services/checkoutService';
 import { PaymentService } from '../services/paymentService';
 import { OrderTrackingService } from '../services/orderTrackingService';
@@ -17,7 +17,10 @@ router.get('/', async (req, res) => {
     const userId = req.headers['user-id'] as string;
 
     if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ 
+        error: 'User not authenticated',
+        code: 'AUTHENTICATION_REQUIRED'
+      });
     }
 
     const { data: orders, error, count } = await supabase
@@ -29,7 +32,10 @@ router.get('/', async (req, res) => {
 
     if (error) {
       console.error('Database error:', error);
-      return res.status(500).json({ error: 'Failed to fetch orders' });
+      return res.status(500).json({ 
+        error: 'Failed to fetch orders',
+        code: 'DATABASE_ERROR'
+      });
     }
 
     res.json({
@@ -43,7 +49,10 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Orders error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
   }
 });
 
@@ -54,7 +63,10 @@ router.get('/:id', async (req, res) => {
     const userId = req.headers['user-id'] as string;
 
     if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ 
+        error: 'User not authenticated',
+        code: 'AUTHENTICATION_REQUIRED'
+      });
     }
 
     const { data: order, error } = await supabase
@@ -65,13 +77,19 @@ router.get('/:id', async (req, res) => {
       .single();
 
     if (error || !order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ 
+        error: 'Order not found',
+        code: 'ORDER_NOT_FOUND'
+      });
     }
 
     res.json({ order });
   } catch (error) {
     console.error('Order error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
   }
 });
 
@@ -82,7 +100,25 @@ router.post('/', async (req, res) => {
     const userId = req.headers['user-id'] as string;
 
     if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ 
+        error: 'User not authenticated',
+        code: 'AUTHENTICATION_REQUIRED'
+      });
+    }
+
+    // Validate required fields
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        error: 'Order items are required',
+        code: 'INVALID_REQUEST'
+      });
+    }
+
+    if (!shippingAddress) {
+      return res.status(400).json({ 
+        error: 'Shipping address is required',
+        code: 'INVALID_REQUEST'
+      });
     }
 
     // Calculate totals
@@ -113,7 +149,10 @@ router.post('/', async (req, res) => {
 
     if (error) {
       console.error('Database error:', error);
-      return res.status(500).json({ error: 'Failed to create order' });
+      return res.status(500).json({ 
+        error: 'Failed to create order',
+        code: 'DATABASE_ERROR'
+      });
     }
 
     res.status(201).json({
@@ -122,7 +161,10 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
   }
 });
 
@@ -132,6 +174,13 @@ router.patch('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    if (!status) {
+      return res.status(400).json({ 
+        error: 'Status is required',
+        code: 'INVALID_REQUEST'
+      });
+    }
+
     const { data: order, error } = await supabase
       .from('orders')
       .update({ status })
@@ -140,7 +189,10 @@ router.patch('/:id/status', async (req, res) => {
       .single();
 
     if (error || !order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ 
+        error: 'Order not found',
+        code: 'ORDER_NOT_FOUND'
+      });
     }
 
     res.json({
@@ -149,7 +201,10 @@ router.patch('/:id/status', async (req, res) => {
     });
   } catch (error) {
     console.error('Update order error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
   }
 });
 
@@ -159,20 +214,44 @@ router.post('/checkout/init', async (req, res) => {
     const { items, shipping_address, billing_address, shipping_method_id, payment_method } = req.body;
     const userId = req.headers['user-id'] as string;
 
+    // Enhanced validation
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Cart items are required' });
+      return res.status(400).json({ 
+        error: 'Cart items are required',
+        code: 'INVALID_REQUEST'
+      });
     }
 
     if (!shipping_address) {
-      return res.status(400).json({ error: 'Shipping address is required' });
+      return res.status(400).json({ 
+        error: 'Shipping address is required',
+        code: 'INVALID_REQUEST'
+      });
     }
 
     if (!shipping_method_id) {
-      return res.status(400).json({ error: 'Shipping method is required' });
+      return res.status(400).json({ 
+        error: 'Shipping method is required',
+        code: 'INVALID_REQUEST'
+      });
     }
 
     if (!payment_method) {
-      return res.status(400).json({ error: 'Payment method is required' });
+      return res.status(400).json({ 
+        error: 'Payment method is required',
+        code: 'INVALID_REQUEST'
+      });
+    }
+
+    // Validate shipping address fields
+    const requiredFields = ['first_name', 'last_name', 'address_line_1', 'city', 'state', 'postal_code', 'country', 'phone'];
+    for (const field of requiredFields) {
+      if (!shipping_address[field]) {
+        return res.status(400).json({ 
+          error: `${field.replace('_', ' ')} is required`,
+          code: 'INVALID_REQUEST'
+        });
+      }
     }
 
     const checkoutData = {
@@ -193,9 +272,27 @@ router.post('/checkout/init', async (req, res) => {
     });
   } catch (error) {
     console.error('Checkout initialization error:', error);
+    
+    // Enhanced error handling
+    let errorMessage = 'Checkout initialization failed';
+    let errorCode = 'CHECKOUT_ERROR';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Product not found')) {
+        errorCode = 'PRODUCT_NOT_FOUND';
+      } else if (error.message.includes('Insufficient stock')) {
+        errorCode = 'INSUFFICIENT_STOCK';
+      } else if (error.message.includes('Price mismatch')) {
+        errorCode = 'PRICE_MISMATCH';
+      } else if (error.message.includes('Invalid shipping method')) {
+        errorCode = 'INVALID_SHIPPING_METHOD';
+      }
+      errorMessage = error.message;
+    }
+    
     res.status(500).json({ 
-      error: 'Checkout initialization failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: errorMessage,
+      code: errorCode
     });
   }
 });

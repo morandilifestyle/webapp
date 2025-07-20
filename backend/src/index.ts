@@ -1,21 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import session from 'express-session';
+import { supabase } from './config/database';
+import securityMiddleware from './middleware/security';
+
+const app = express();
+const PORT = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 3001);
 
 // Load environment variables
 dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-export const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Security middleware
 app.use(helmet({
@@ -23,8 +19,9 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://checkout.razorpay.com"],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.razorpay.com"],
     },
   },
 }));
@@ -35,13 +32,14 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use('/api/', limiter);
+// Session middleware (must come before other middleware)
+app.use(session(securityMiddleware.sessionConfig));
+
+// Security middleware
+app.use(securityMiddleware.validateRequest);
+app.use(securityMiddleware.ipBlocking);
+app.use(securityMiddleware.securityLogging);
+app.use(securityMiddleware.sessionManagement);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -57,37 +55,80 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/categories', require('./routes/categories'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/cart', require('./routes/cart'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/wishlist', require('./routes/wishlist'));
-app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/blog', require('./routes/blog'));
+// API routes with security middleware
+import authRoutes from './routes/auth';
+import productRoutes from './routes/products';
+import categoryRoutes from './routes/categories';
+import orderRoutes from './routes/orders';
+import userRoutes from './routes/users';
+import cartRoutes from './routes/cart';
+import adminRoutes from './routes/admin';
+import wishlistRoutes from './routes/wishlist';
+import reviewRoutes from './routes/reviews';
+import blogRoutes from './routes/blog';
+import testRoutes from './routes/test';
+
+// Apply rate limiting to different route groups
+app.use('/api/auth', securityMiddleware.rateLimitConfig.auth, authRoutes);
+app.use('/api/products', securityMiddleware.rateLimitConfig.general, productRoutes);
+app.use('/api/categories', securityMiddleware.rateLimitConfig.general, categoryRoutes);
+app.use('/api/users', securityMiddleware.rateLimitConfig.general, userRoutes);
+app.use('/api/cart', securityMiddleware.rateLimitConfig.general, cartRoutes);
+app.use('/api/admin', securityMiddleware.rateLimitConfig.general, adminRoutes);
+app.use('/api/wishlist', securityMiddleware.rateLimitConfig.general, wishlistRoutes);
+app.use('/api/reviews', securityMiddleware.rateLimitConfig.general, reviewRoutes);
+app.use('/api/blog', securityMiddleware.rateLimitConfig.general, blogRoutes);
+app.use('/api/test', securityMiddleware.rateLimitConfig.general, testRoutes);
+
+// Payment and checkout routes with enhanced security
+app.use('/api/orders', 
+  securityMiddleware.rateLimitConfig.checkout,
+  securityMiddleware.paymentSecurity,
+  securityMiddleware.csrfProtection,
+  orderRoutes
+);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  console.error('Error:', err);
+  
+  // Log security-related errors
+  if (err.code && err.code.startsWith('SECURITY_')) {
+    console.warn('Security Error:', {
+      timestamp: new Date().toISOString(),
+      ip: req.ip,
+      path: req.path,
+      method: req.method,
+      error: err.message,
+      code: err.code
+    });
+  }
+  
+  res.status(err.status || 500).json({ 
+    error: err.message || 'Something went wrong!',
+    code: err.code || 'INTERNAL_ERROR',
+    message: process.env.NODE_ENV === 'development' ? err.stack : 'Internal server error'
   });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    error: 'Route not found',
+    code: 'ROUTE_NOT_FOUND'
+  });
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+const server = app.listen(PORT, () => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔒 Security middleware enabled`);
+    console.log(`💳 Payment security enhanced`);
+  }
 });
 
+export { server, supabase };
 export default app; 

@@ -8,6 +8,7 @@ import { Product } from '@/types/product';
 import { productsAPI } from '@/lib/api/products';
 import ProductCard from '@/components/products/ProductCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Script from 'next/script';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -83,8 +84,36 @@ export default function ProductDetailPage() {
   const discountPercentage = getDiscountPercentage();
   const images = product.images || ['/images/placeholder-product.jpg'];
 
+  const productJsonLd = product
+    ? {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        name: product.name,
+        image: product.images,
+        description: product.short_description || product.description || '',
+        sku: (product.sku as string) || String(product.id),
+        brand: { "@type": "Brand", name: "Morandi Lifestyle" },
+        offers: {
+          "@type": "Offer",
+          url: `https://morandi-lifestyle.com/products/${slug}`,
+          priceCurrency: "USD",
+          price: product.sale_price || product.price,
+          availability: product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        },
+      }
+    : null;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      {productJsonLd && (
+        <Script
+          id="ld-json-product"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        />
+      )}
+      <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -294,5 +323,6 @@ export default function ProductDetailPage() {
         )}
       </div>
     </div>
+    </>
   );
 } 

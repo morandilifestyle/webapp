@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import HomePage from '../../app/page';
+import { CartProvider } from '../../store/CartContext';
 
 // Mock Next.js Image component
 jest.mock('next/image', () => ({
@@ -11,9 +12,16 @@ jest.mock('next/image', () => ({
   },
 }));
 
+// Test wrapper component
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <CartProvider>
+    {children}
+  </CartProvider>
+);
+
 describe('HomePage Component', () => {
   it('renders hero section with correct content', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for main heading
     expect(screen.getByText('Sustainable Wellness Textiles')).toBeInTheDocument();
@@ -27,7 +35,7 @@ describe('HomePage Component', () => {
   });
 
   it('renders product categories section', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for section heading
     expect(screen.getByText('Our Collections')).toBeInTheDocument();
@@ -40,7 +48,7 @@ describe('HomePage Component', () => {
   });
 
   it('renders features section with benefits', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for section heading
     expect(screen.getByText('Why Choose Morandi?')).toBeInTheDocument();
@@ -52,7 +60,7 @@ describe('HomePage Component', () => {
   });
 
   it('displays correct category descriptions', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check category descriptions
     expect(screen.getByText(/Safe, organic products for expecting mothers/)).toBeInTheDocument();
@@ -62,7 +70,7 @@ describe('HomePage Component', () => {
   });
 
   it('displays correct feature descriptions', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check feature descriptions
     expect(screen.getByText(/All our materials are certified organic/)).toBeInTheDocument();
@@ -71,7 +79,7 @@ describe('HomePage Component', () => {
   });
 
   it('has proper accessibility attributes', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for semantic HTML structure
     expect(screen.getByRole('main')).toBeInTheDocument();
@@ -82,7 +90,7 @@ describe('HomePage Component', () => {
   });
 
   it('renders with correct styling classes', () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for Tailwind classes
     expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
@@ -91,7 +99,7 @@ describe('HomePage Component', () => {
   });
 
   it('displays emoji icons in category cards', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for emoji icons (🏥)
     const emojiElements = screen.getAllByText('🏥');
@@ -99,7 +107,7 @@ describe('HomePage Component', () => {
   });
 
   it('displays emoji icons in feature section', () => {
-    render(<HomePage />);
+    render(<HomePage />, { wrapper: TestWrapper });
 
     // Check for feature emojis
     expect(screen.getByText('🌱')).toBeInTheDocument();

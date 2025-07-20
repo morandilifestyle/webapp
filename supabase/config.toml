@@ -193,10 +193,10 @@ template = "Your code is {{ .Code }}"
 max_frequency = "5s"
 
 # Use pre-defined map of phone number to OTP for testing
-[auth.external.phone]
-enabled = false
+# [auth.external.phone]
+# enabled = false
 # Map of phone numbers to OTP codes for testing
-test_otp = { "1234567890" = "123456" }
+# test_otp = { "1234567890" = "123456" }
 
 # Configure logged in session timeouts.
 # [auth.sessions]
@@ -320,25 +320,25 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 # Email template URLs. These can be overridden with custom URLs if you want to use your own
 # templates. The URL must be publicly accessible.
-[auth.email.template.invite]
-subject = "You have been invited"
-content_path = "./supabase/templates/invite.html"
+# [auth.email.template.invite]
+# subject = "You have been invited"
+# content_path = "./supabase/templates/invite.html"
 
-[auth.email.template.confirmation]
-subject = "Confirm your signup"
-content_path = "./supabase/templates/confirmation.html"
+# [auth.email.template.confirmation]
+# subject = "Confirm your signup"
+# content_path = "./supabase/templates/confirmation.html"
 
-[auth.email.template.recovery]
-subject = "Reset your password"
-content_path = "./supabase/templates/recovery.html"
+# [auth.email.template.recovery]
+# subject = "Reset your password"
+# content_path = "./supabase/templates/recovery.html"
 
-[auth.email.template.email_change]
-subject = "Confirm your email change"
-content_path = "./supabase/templates/email_change.html"
+# [auth.email.template.email_change]
+# subject = "Confirm your email change"
+# content_path = "./supabase/templates/email_change.html"
 
-[auth.email.template.magic_link]
-subject = "Your magic link"
-content_path = "./supabase/templates/magic_link.html"
+# [auth.email.template.magic_link]
+# subject = "Your magic link"
+# content_path = "./supabase/templates/magic_link.html"
 
-[auth.sms.template]
-content = "Your code is {{ .Code }}"
+# [auth.sms.template]
+# content = "Your code is {{ .Code }}"

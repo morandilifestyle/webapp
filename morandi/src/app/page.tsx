@@ -1,36 +1,37 @@
 import Header from '@/components/ui/Header';
+import Script from 'next/script';
+import Hero from '@/components/landing/Hero';
+import Footer from '@/components/landing/Footer';
 
 export default function HomePage() {
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://morandi-lifestyle.com/",
+      },
+    ],
+  };
   return (
     <>
+      <Script
+        id="ld-json-breadcrumb"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <Header />
-      <main className="min-h-screen">
+      <main className="min-h-screen pt-16">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-50 to-secondary-50 py-20">
-        <div className="container-custom">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gradient mb-6">
-              Sustainable Wellness Textiles
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Premium organic materials for maternity, healthcare, home, and hospitality. 
-              Experience comfort, quality, and sustainability in every thread.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/products" className="btn-primary text-lg px-8 py-3">
-                Shop Now
-              </a>
-              <button className="btn-outline text-lg px-8 py-3">
-                Learn More
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* Categories Section */}
       <section className="py-16 bg-white">
-        <div className="container-custom">
+        <div className="container px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Our Collections</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
@@ -76,7 +77,7 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="py-16 bg-gray-50">
-        <div className="container-custom">
+        <div className="container px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Why Choose Morandi?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -105,6 +106,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
       </main>
     </>
   );

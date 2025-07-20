@@ -1,7 +1,7 @@
 import request from 'supertest';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import app from '../index';
+import app from '../../index';
 
 // Mock Supabase
 jest.mock('@supabase/supabase-js', () => ({

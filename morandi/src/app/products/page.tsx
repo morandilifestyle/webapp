@@ -180,8 +180,8 @@ function ProductsPageContent() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {pagination.total > 0 
-                    ? `${pagination.total} products found`
+                  {(pagination?.total ?? 0) > 0 
+                    ? `${pagination?.total ?? 0} products found`
                     : 'No products found'
                   }
                 </h2>
@@ -223,11 +223,11 @@ function ProductsPageContent() {
                 </div>
 
                 {/* Pagination */}
-                {pagination.totalPages > 1 && (
+                {(pagination?.totalPages ?? 0) > 1 && (
                   <div className="mt-8">
                     <Pagination
-                      currentPage={pagination.page}
-                      totalPages={pagination.totalPages}
+                      currentPage={pagination?.page ?? 1}
+                      totalPages={pagination?.totalPages ?? 1}
                       onPageChange={handlePageChange}
                     />
                   </div>

@@ -2,15 +2,6 @@ import multer from 'multer';
 import path from 'path';
 import { Request } from 'express';
 
-// Extend Request interface to include files
-declare global {
-  namespace Express {
-    interface Request {
-      files?: any[];
-    }
-  }
-}
-
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
@@ -80,7 +71,7 @@ export const validateUploadedFiles = (req: Request, res: any, next: any) => {
   // Check if all files are images
   const files = Array.isArray(req.files) ? req.files : [req.files];
   for (const file of files) {
-    if (!file.mimetype.startsWith('image/')) {
+    if (file && typeof file.mimetype === 'string' && !file.mimetype.startsWith('image/')) {
       return res.status(400).json({ error: 'Only image files are allowed' });
     }
   }

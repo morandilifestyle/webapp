@@ -1,4 +1,4 @@
-import { supabase } from '../index';
+import { supabase } from '../config/database';
 import { PaymentService } from './paymentService';
 
 export interface OrderReturn {

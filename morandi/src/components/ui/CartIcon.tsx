@@ -18,13 +18,19 @@ export default function CartIcon() {
 
   return (
     <>
-      <div className="relative">
+      <button
+        onClick={handleCartClick}
+        className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+        aria-label="Shopping cart"
+        aria-describedby="cart-count"
+      >
         <svg
           className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -36,11 +42,15 @@ export default function CartIcon() {
         
         {/* Cart item count badge */}
         {cart.itemCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+          <span 
+            id="cart-count"
+            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
+            aria-label={`${cart.itemCount} items in cart`}
+          >
             {cart.itemCount > 99 ? '99+' : cart.itemCount}
           </span>
         )}
-      </div>
+      </button>
 
       <CartDrawer isOpen={isDrawerOpen} onClose={handleCloseDrawer} />
     </>

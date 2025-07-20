@@ -134,7 +134,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const cartData = await cartAPI.getCart();
       
       // Transform API response to CartItem format
-      const transformedItems: CartItem[] = cartData.items.map((item: any) => ({
+      const transformedItems: CartItem[] = (cartData.items || []).map((item: any) => ({
         id: item.id,
         productId: item.product_id,
         name: item.product.name,

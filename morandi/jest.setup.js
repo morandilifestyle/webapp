@@ -130,6 +130,15 @@ Object.defineProperty(window, 'scrollTo', {
   value: jest.fn(),
 });
 
+// Mock fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+  })
+);
+
 // Suppress console errors in tests
 const originalError = console.error;
 beforeAll(() => {

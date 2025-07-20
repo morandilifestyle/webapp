@@ -38,7 +38,8 @@ class ProductsAPI {
       }
     });
 
-    return this.request<ProductsResponse>(`/products?${params.toString()}`);
+    // Temporarily use test endpoint for development
+    return this.request<ProductsResponse>(`/test/products?${params.toString()}`);
   }
 
   // Get single product by slug

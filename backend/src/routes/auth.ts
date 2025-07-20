@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { supabase } from '../index';
+import { supabase } from '../config/database';
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET! as any) as any;
     req.user = decoded;
     next();
   } catch (error) {
@@ -98,8 +98,8 @@ router.post('/register', validateRegistration, async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      process.env.JWT_SECRET! as any,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' } as any
     );
 
     res.status(201).json({
@@ -148,8 +148,8 @@ router.post('/login', validateLogin, async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      process.env.JWT_SECRET! as any,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' } as any
     );
 
     res.json({
@@ -186,8 +186,8 @@ router.post('/refresh', authenticateToken, async (req, res) => {
     // Generate new token
     const token = jwt.sign(
       { userId: req.user.userId, email: req.user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      process.env.JWT_SECRET! as any,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' } as any
     );
 
     res.json({ token });
@@ -222,7 +222,7 @@ router.post('/forgot-password', validatePasswordReset, async (req, res) => {
     // Generate reset token
     const resetToken = jwt.sign(
       { userId: user.id, email },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET! as any,
       { expiresIn: '1h' }
     );
 
@@ -249,7 +249,7 @@ router.post('/reset-password', validateNewPassword, async (req, res) => {
     const { password, token } = req.body;
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET! as any) as any;
     
     // Hash new password
     const saltRounds = 12;

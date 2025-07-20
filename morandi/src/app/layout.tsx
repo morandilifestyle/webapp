@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/store/CartContext';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -58,6 +59,31 @@ export const metadata: Metadata = {
     google: 'your-google-verification-code',
   },
 };
+
+export function Head() {
+  return (
+    <>
+      <Script
+        id="ld-json-website"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Morandi Lifestyle",
+            url: "https://morandi-lifestyle.com",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://morandi-lifestyle.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        }}
+      />
+    </>
+  );
+}
 
 export default function RootLayout({
   children,

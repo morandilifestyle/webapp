@@ -6,6 +6,16 @@ module.exports = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '3rem',
+        xl: '4rem',
+        '2xl': '5rem',
+      },
+    },
     extend: {
       colors: {
         primary: {
@@ -44,10 +54,17 @@ module.exports = {
           800: '#854d0e',
           900: '#713f12',
         },
+        brand: '#111827',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ['Playfair Display', 'Georgia', 'serif'],
+      },
+      borderRadius: {
+        lg: '1rem',
+      },
+      boxShadow: {
+        card: '0 2px 8px rgba(0,0,0,0.04)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -70,7 +87,7 @@ module.exports = {
       },
     },
   },
-  plugins: [require('daisyui')],
+  plugins: [require('daisyui'), require('@tailwindcss/typography')],
   daisyui: {
     themes: [
       {

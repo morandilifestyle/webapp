@@ -58,7 +58,7 @@ const validateUploadedFiles = (req, res, next) => {
     }
     const files = Array.isArray(req.files) ? req.files : [req.files];
     for (const file of files) {
-        if (!file.mimetype.startsWith('image/')) {
+        if (file && typeof file.mimetype === 'string' && !file.mimetype.startsWith('image/')) {
             return res.status(400).json({ error: 'Only image files are allowed' });
         }
     }
