@@ -9,7 +9,7 @@ CREATE TABLE blog_posts (
     excerpt TEXT,
     content TEXT NOT NULL,
     featured_image VARCHAR(500),
-    author_id UUID REFERENCES users(id),
+    author_id UUID REFERENCES auth.users(id),
     status VARCHAR(20) DEFAULT 'draft', -- draft, published, scheduled, archived
     published_at TIMESTAMP,
     meta_title VARCHAR(255),
@@ -47,7 +47,7 @@ CREATE TABLE blog_post_categories (
 CREATE TABLE blog_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID REFERENCES blog_posts(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id),
+    user_id UUID REFERENCES auth.users(id),
     parent_id UUID REFERENCES blog_comments(id),
     author_name VARCHAR(100),
     author_email VARCHAR(255),
@@ -80,7 +80,7 @@ CREATE TABLE content_analytics (
     content_id UUID NOT NULL,
     content_type VARCHAR(50) NOT NULL, -- blog_post, promotional_content
     event_type VARCHAR(50) NOT NULL, -- view, like, share, comment
-    user_id UUID REFERENCES users(id),
+    user_id UUID REFERENCES auth.users(id),
     session_id VARCHAR(255),
     ip_address INET,
     user_agent TEXT,
@@ -138,9 +138,9 @@ CREATE POLICY "Authors can manage their own posts" ON blog_posts
 CREATE POLICY "Admins can manage all posts" ON blog_posts
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE users.id = auth.uid() 
-            AND users.role = 'admin'
+            SELECT 1 FROM auth.users 
+            WHERE auth.users.id = auth.uid() 
+            AND auth.role() = 'service_role'
         )
     );
 
@@ -151,9 +151,9 @@ CREATE POLICY "Public can view active categories" ON blog_categories
 CREATE POLICY "Admins can manage categories" ON blog_categories
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE users.id = auth.uid() 
-            AND users.role = 'admin'
+            SELECT 1 FROM auth.users 
+            WHERE auth.users.id = auth.uid() 
+            AND auth.role() = 'service_role'
         )
     );
 
@@ -170,9 +170,9 @@ CREATE POLICY "Users can update their own comments" ON blog_comments
 CREATE POLICY "Admins can manage all comments" ON blog_comments
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE users.id = auth.uid() 
-            AND users.role = 'admin'
+            SELECT 1 FROM auth.users 
+            WHERE auth.users.id = auth.uid() 
+            AND auth.role() = 'service_role'
         )
     );
 
@@ -183,9 +183,9 @@ CREATE POLICY "Public can view active promotional content" ON promotional_conten
 CREATE POLICY "Admins can manage promotional content" ON promotional_content
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE users.id = auth.uid() 
-            AND users.role = 'admin'
+            SELECT 1 FROM auth.users 
+            WHERE auth.users.id = auth.uid() 
+            AND auth.role() = 'service_role'
         )
     );
 
@@ -195,7 +195,7 @@ CREATE POLICY "Public can subscribe to newsletter" ON newsletter_subscriptions
 
 CREATE POLICY "Users can manage their own subscriptions" ON newsletter_subscriptions
     FOR UPDATE USING (email = (
-        SELECT email FROM users WHERE users.id = auth.uid()
+        SELECT email FROM auth.users WHERE auth.users.id = auth.uid()
     ));
 
 -- Insert sample blog categories
